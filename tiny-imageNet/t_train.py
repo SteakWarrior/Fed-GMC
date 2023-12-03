@@ -74,8 +74,9 @@ def server_train(args, server_opt, server_model, data, label, round, epoch, crit
     optimizer1.zero_grad()
     optimizer2.zero_grad()
 
-    output2 = model2(data)
     output1 = model1(data)
+    semi_f = model1.semi_f.detach()
+    output2 = model2(semi_f)
 
     if epoch == 1:
         args.teacher_pred = output1
@@ -118,8 +119,9 @@ def server_test(args, server_model, test_loader, ex_layer, round, user_id, epoch
         for batch_idx, (data, label) in enumerate(test_loader):
             data, label = data.cuda(), label.cuda()
             feature = F.relu(bn1(conv1(data)))
-            output2 = model2(feature)
             output1 = model1(feature)
+            semi_f = model1.semi_f
+            output2 = model2(semi_f)
             predicted1 = torch.max(output1, 1)[1].data.cpu().numpy()
             predicted2 = torch.max(output2, 1)[1].data.cpu().numpy()
             test_loss1 = F.cross_entropy(output1, label)
